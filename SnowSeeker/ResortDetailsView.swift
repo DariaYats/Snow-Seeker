@@ -9,19 +9,22 @@ import SwiftUI
 
 struct ResortDetailsView: View {
     let resort: Resort
-    
+
     var size: String {
         switch resort.size {
-        case 1: "Small"
-        case 2: "Average"
-        default: "Large"
+        case 1:
+            return "Small"
+        case 2:
+            return "Average"
+        default:
+            return "Large"
         }
     }
-    
+
     var price: String {
         String(repeating: "$", count: resort.price)
     }
-    
+
     var body: some View {
         Group {
             VStack {
@@ -30,7 +33,7 @@ struct ResortDetailsView: View {
                 Text(size)
                     .font(.title3)
             }
-            
+
             VStack {
                 Text("Price")
                     .font(.caption.bold())
@@ -42,6 +45,8 @@ struct ResortDetailsView: View {
     }
 }
 
-#Preview {
-    ResortDetailsView(resort: .example)
+struct ResortDetailsView_Previews: PreviewProvider {
+    static var previews: some View {
+        ResortDetailsView(resort: Resort.example)
+    }
 }
