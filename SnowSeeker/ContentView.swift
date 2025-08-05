@@ -6,58 +6,95 @@
 //
 
 import SwiftUI
+import Foundation
 
+extension View {
+    @ViewBuilder func phoneOnlyNavigationView() -> some View {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            self.navigationViewStyle(.stack)
+        } else {
+            self
+        }
+    }
+}
 
 struct ContentView: View {
     let resorts: [Resort] = Bundle.main.decode("resorts.json")
-    
+
+    @StateObject var favorites = Favorites()
     @State private var searchText = ""
-    var filteredResorts: [Resort] {
-        if searchText.isEmpty {
-            resorts
-        } else {
-            resorts.filter { $0.name.localizedStandardContains(searchText) }
-        }
-    }
-    
-    
+    @State private var sortOrder = SortDescriptor(\Resort.name)
+
     var body: some View {
-        NavigationSplitView {
+        NavigationView {
             List(filteredResorts) { resort in
-                NavigationLink(value: resort) {
+                NavigationLink {
+                    ResortView(resort: resort)
+                } label: {
                     HStack {
                         Image(resort.country)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 40, height: 25)
-                            .clipShape(
-                                .rect(cornerRadius: 5)
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 5))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 5)
                                     .stroke(.black, lineWidth: 1)
                             )
-                        
+
                         VStack(alignment: .leading) {
                             Text(resort.name)
                                 .font(.headline)
                             Text("\(resort.runs) runs")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if favorites.contains(resort) {
+                            Spacer()
+                            Image(systemName: "heart.fill")
+                                .accessibilityLabel("This is a favorite resort")
+                                .foregroundColor(.red)
                         }
                     }
                 }
             }
             .navigationTitle("Resorts")
-            .navigationDestination(for: Resort.self) { resort in
-                ResortView(resort: resort)
-            }
             .searchable(text: $searchText, prompt: "Search for a resort")
-        } detail: {
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Picker("Sort", selection: $sortOrder) {
+                            Text("Alphabetical")
+                                .tag(SortDescriptor(\Resort.name, order: .forward))
+                            Text("County")
+                                .tag(SortDescriptor(\Resort.country, order: .forward))
+                            Text("Runs")
+                                .tag(SortDescriptor(\Resort.runs, order: .forward))
+
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .accessibilityLabel("Sort Options")
+                            .accessibilityHint("Changes the sorting order of the resort list")
+                    }
+                }
+            }
+
             WelcomeView()
         }
+        .environmentObject(favorites)
+    }
+
+    var filteredResorts: [Resort] {
+        let filtered = searchText.isEmpty ? resorts : resorts.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        return filtered.sorted(using: sortOrder)
     }
 }
-    
-#Preview {
-    ContentView()
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
+
+
