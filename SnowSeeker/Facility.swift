@@ -5,7 +5,6 @@
 //  Created by Дарья Яцынюк on 31.10.2024.
 //
 
-import Foundation
 import SwiftUI
 
 struct Facility: Identifiable {
@@ -14,7 +13,7 @@ struct Facility: Identifiable {
     
     private let icons = [
         "Accommodation": "house",
-        "Beginners": "1.cicle",
+        "Beginners": "1.circle",
         "Cross-country": "map",
         "Eco-friendly": "leaf.arrow.circlepath",
         "Family": "person.3"
@@ -30,7 +29,7 @@ struct Facility: Identifiable {
     
     var description: String {
         if let message = descriptions[name] {
-            message
+            return message
         } else {
             fatalError("Unknown facility type: \(name)")
         }
@@ -38,7 +37,7 @@ struct Facility: Identifiable {
     
     var icon: some View {
         if let iconName = icons[name] {
-            Image(systemName: iconName)
+            return Image(systemName: iconName)
                 .accessibilityLabel(name)
                 .foregroundColor(.secondary)
         } else {
