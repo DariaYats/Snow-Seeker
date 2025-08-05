@@ -9,12 +9,14 @@ import SwiftUI
 
 struct ResortView: View {
     let resort: Resort
+
+    @Environment(\.horizontalSizeClass) var sizeClass
+    @Environment(\.dynamicTypeSize) var typeSize
+
+    @EnvironmentObject var favorites: Favorites
     
     @State private var selectedFacility: Facility?
     @State private var showingFacility = false
-    
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     
     var body: some View {
         ScrollView {
@@ -22,9 +24,17 @@ struct ResortView: View {
                 Image(decorative: resort.id)
                     .resizable()
                     .scaledToFit()
-                
+                    .overlay(
+                        Text("Photo by \(resort.imageCredit)")
+                            .font(.subheadline)
+                            .background(Color.gray.opacity(0.6))
+                            .cornerRadius(5)
+                            .padding([.bottom, .trailing], 10),
+                        alignment: .bottomTrailing
+                    )
+
                 HStack {
-                    if horizontalSizeClass == .compact && dynamicTypeSize > .large {
+                    if sizeClass == .compact && typeSize > .large {
                         VStack(spacing: 10) { ResortDetailsView(resort: resort) }
                         VStack(spacing: 10) { SkiDetailsView(resort: resort) }
                     } else {
@@ -33,41 +43,55 @@ struct ResortView: View {
                     }
                 }
                 .padding(.vertical)
-                .background(.primary.opacity(0.1))
-                
+                .background(Color.primary.opacity(0.1))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
                 Group {
                     Text(resort.description)
                         .padding(.vertical)
-                    
+
                     Text("Facilities")
                         .font(.headline)
-                    
+
                     HStack {
                         ForEach(resort.facilityTypes) { facility in
                             Button {
                                 selectedFacility = facility
                                 showingFacility = true
-                            } label : {
+                            } label: {
                                 facility.icon
                                     .font(.title)
                             }
                         }
                     }
-                    .padding(.vertical)
+
+                    Button(favorites.contains(resort) ? "Remove from Favorites" : "Add to Favorites") {
+                        if favorites.contains(resort) {
+                            favorites.remove(resort)
+                        } else {
+                            favorites.add(resort)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding()
                 }
-                
                 .padding(.horizontal)
             }
         }
         .navigationTitle("\(resort.name), \(resort.country)")
         .navigationBarTitleDisplayMode(.inline)
         .alert(selectedFacility?.name ?? "More information", isPresented: $showingFacility, presenting: selectedFacility) { _ in
-        } message: { Facility in
-            Text(Facility.description)
+        } message: { facility in
+            Text(facility.description)
         }
     }
 }
 
-#Preview {
-    ResortView(resort: .example)
+struct ResortView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationView {
+            ResortView(resort: Resort.example)
+        }
+        .environmentObject(Favorites())
+    }
 }
